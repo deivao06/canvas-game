@@ -1,5 +1,17 @@
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
+var redeNeural = new RedeNeural(2,3,1);
+var data = {
+    inputs : [
+        [-1,-1],
+        [-1,1]
+    ],
+    outputs : [
+        [1], //SUBIR
+        [0], //DESCER
+    ]
+};
+var train = true;
 
 var game = {
     players : {
@@ -27,15 +39,26 @@ var game = {
             y: (canvas.height / 2)- 2,
             orientationX: Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3,
             orientationY: Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3,
-            speed: 1
+            speed: 0.5
         },
     }
 };
 
-// requestAnimationFrame(renderGame);
+requestAnimationFrame(renderGame);
 
 function renderGame(){
     context.clearRect(0,0,canvas.width, canvas.height);
+
+    if (train){
+        for (var i=0; i<10000; i++){
+            var index = random(0, data.inputs.length - 1);
+            redeNeural.train(data.inputs[index], data.outputs[index]);
+        }
+        if (redeNeural.predict([-1,-1])[0] > 0.98 && redeNeural.predict([-1,1])[0] < 0.04) {
+            train = false;
+            console.log('terminou');
+        }
+    }
 
     var ball = game.balls['ball1'];
     context.fillStyle = 'red';
@@ -53,6 +76,12 @@ function renderGame(){
 
     checkBallColision(ball);
 
+    var player2move = Math.round(redeNeural.predict([ball.orientationX, ball.orientationY])[0]);
+    if (player2move && game.players['player2'].y > 0){
+        game.players['player2'].y -= game.players['player2'].speed;
+    }else if (!player2move && game.players['player2'].y + game.players['player2'].h  < canvas.height){
+        game.players['player2'].y += game.players['player2'].speed;
+    }
     requestAnimationFrame(renderGame);
 }
 
@@ -92,3 +121,14 @@ document.addEventListener("keydown", function (event) {
             console.log('Not a command key');
     }
 });
+
+function random(min, max, float = false){
+    var randomNumber = 0;
+    if (float){
+        randomNumber = Math.random() * (max - min) + min;
+    }else{
+        randomNumber = Math.floor(Math.random()*(max-min+1)+min);
+    }
+
+    return randomNumber;
+}
