@@ -27,12 +27,12 @@ var game = {
             y: (canvas.height / 2)- 2,
             orientationX: Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3,
             orientationY: Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3,
-            speed: 0.5
+            speed: 1
         },
     }
 };
 
-requestAnimationFrame(renderGame);
+// requestAnimationFrame(renderGame);
 
 function renderGame(){
     context.clearRect(0,0,canvas.width, canvas.height);

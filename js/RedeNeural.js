@@ -25,7 +25,6 @@ class RedeNeural {
 
         // INPUT -> HIDDEN
         var input = Matrix.arrayToMatrix(arr);
-
         var hidden = Matrix.multiply(this.weigths_ih, input);
         hidden = Matrix.add(hidden, this.bias_ih);
         hidden.map(sigmoid);
@@ -43,7 +42,7 @@ class RedeNeural {
         var d_output = Matrix.map(output, dsigmoid);
         var hidden_t = Matrix.transpose(hidden);
 
-        var gradient = Matrix.hadamard(output_error, d_output);
+        var gradient = Matrix.hadamard(d_output, output_error);
         gradient = Matrix.escalarMultiply(gradient, this.learning_rate);
 
         //ADJUST BIAS O->H

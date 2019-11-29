@@ -18,4 +18,5 @@
 <script src="js/Matrix.js"></script>
 <script src="js/RedeNeural.js"></script>
 <script src="js/game.js"></script>
+<script src="js/neuraltest.js"></script>
 </html>
