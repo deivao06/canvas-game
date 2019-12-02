@@ -1,16 +1,21 @@
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
-var redeNeural = new RedeNeural(2,3,1);
+
+var redeNeural = new RedeNeural(3,3,1);
+
 var data = {
     inputs : [
-        [-1,-1],
-        [-1,1]
+        [-1,-1, 10],
+        [0, 1, 5],
+        [-1,1, 10]
     ],
     outputs : [
         [1], //SUBIR
-        [0], //DESCER
+        [0], //PARAR
+        [-1]//DESCER
     ]
 };
+
 var train = true;
 
 var game = {
@@ -48,15 +53,16 @@ requestAnimationFrame(renderGame);
 
 function renderGame(){
     context.clearRect(0,0,canvas.width, canvas.height);
-
     if (train){
         for (var i=0; i<10000; i++){
             var index = random(0, data.inputs.length - 1);
             redeNeural.train(data.inputs[index], data.outputs[index]);
         }
-        if (redeNeural.predict([-1,-1])[0] > 0.98 && redeNeural.predict([-1,1])[0] < 0.04) {
+        if (redeNeural.predict([-1,-1, 10])[0] > 0.98 && redeNeural.predict([0,1, 5])[0] < 0.04) {
             train = false;
             console.log('terminou');
+        }else{
+            console.log(redeNeural.predict([-1,-1, 10])[0], redeNeural.predict([-1,1, 10])[0])
         }
     }
 
@@ -76,12 +82,6 @@ function renderGame(){
 
     checkBallColision(ball);
 
-    var player2move = Math.round(redeNeural.predict([ball.orientationX, ball.orientationY])[0]);
-    if (player2move && game.players['player2'].y > 0){
-        game.players['player2'].y -= game.players['player2'].speed;
-    }else if (!player2move && game.players['player2'].y + game.players['player2'].h  < canvas.height){
-        game.players['player2'].y += game.players['player2'].speed;
-    }
     requestAnimationFrame(renderGame);
 }
 
@@ -89,12 +89,19 @@ function checkBallColision(ball){
     var player1 = game.players['player1'];
     var player2 = game.players['player2'];
 
-    if (ball.x <= player1.x + player1.w && ball.y >= player1.y && ball.y <= player1.y + player1.h){
+    if (ball.x >= player1.x && ball.x <= player1.x + player1.w && ball.y >= player1.y && ball.y <= player1.y + player1.h){
         ball.orientationX = 1;
     }
-    if (ball.x >= player2.x - player2.w && ball.y >= player2.y && ball.y <= player2.y + player2.h){
+    if (ball.x >= player2.x && ball.x <= player2.x + player2.w && ball.y >= player2.y && ball.y <= player2.y + player2.h){
         ball.orientationX = -1;
     }
+    if (ball.x > canvas.width || ball.x < 0){
+        ball.x = (canvas.width / 2) - 2;
+        ball.y = (canvas.height / 2) - 2;
+        ball.orientationX = Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3;
+        ball.orientationY = Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3;
+    }
+
     if(ball.y + ball.h >= canvas.height || ball.y <= 0) {
         ball.orientationY *= -1
     }
