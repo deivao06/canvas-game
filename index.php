@@ -14,6 +14,7 @@
 </head>
 <body>
     <canvas id="canvas" width="30" height="30"></canvas>
+    <canvas id="canvas2" width="400" height="400"></canvas>
 </body>
 <script src="js/Matrix.js"></script>
 <script src="js/RedeNeural.js"></script>

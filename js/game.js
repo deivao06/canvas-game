@@ -1,18 +1,22 @@
 var canvas = document.getElementById("canvas");
+var canvas2 = document.getElementById("canvas2");
 var context = canvas.getContext("2d");
+var context2 = canvas2.getContext("2d");
 
-var redeNeural = new RedeNeural(3,3,1);
+var redeNeural = new RedeNeural(3,5,3);
 
 var data = {
     inputs : [
-        [-1,-1, 10],
-        [0, 1, 5],
-        [-1,1, 10]
+        [1,-1, 15],
+        [1,1, 15],
+        [1,1, 2],
+        [1, -1, 2]
     ],
     outputs : [
-        [1], //SUBIR
-        [0], //PARAR
-        [-1]//DESCER
+        [1, 0, 0], //SUBIR
+        [0,1,0], //DESCER
+        [0,0,1], //PARAR
+        [0,0,1], //PARAR
     ]
 };
 
@@ -44,7 +48,7 @@ var game = {
             y: (canvas.height / 2)- 2,
             orientationX: Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3,
             orientationY: Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3,
-            speed: 0.5
+            speed: 0.2
         },
     }
 };
@@ -53,36 +57,96 @@ requestAnimationFrame(renderGame);
 
 function renderGame(){
     context.clearRect(0,0,canvas.width, canvas.height);
+    context2.clearRect(0,0,canvas2.width, canvas2.height);
+
     if (train){
         for (var i=0; i<10000; i++){
             var index = random(0, data.inputs.length - 1);
             redeNeural.train(data.inputs[index], data.outputs[index]);
         }
-        if (redeNeural.predict([-1,-1, 10])[0] > 0.98 && redeNeural.predict([0,1, 5])[0] < 0.04) {
+        if (redeNeural.predict([1,-1, 15])[0] > 0.98 && redeNeural.predict([1, -1, 2])[2] > 0.98) {
             train = false;
             console.log('terminou');
         }else{
-            console.log(redeNeural.predict([-1,-1, 10])[0], redeNeural.predict([-1,1, 10])[0])
+            console.log(redeNeural.predict([1,-1, 15])[0], redeNeural.predict([1, -1, 2])[2])
         }
     }
 
-    var ball = game.balls['ball1'];
-    context.fillStyle = 'red';
-    context.fillRect(ball.x, ball.y, ball.w ,ball.h);
+    if (!train){
+        var ball = game.balls['ball1'];
+        context.fillStyle = 'red';
+        context.fillRect(ball.x, ball.y, ball.w ,ball.h);
 
-    for (var playerId in game.players){
-        var player = game.players[playerId];
+        for (var playerId in game.players){
+            var player = game.players[playerId];
 
-        context.fillStyle = 'black';
-        context.fillRect(player.x, player.y, player.w ,player.h);
+            context.fillStyle = 'black';
+            context.fillRect(player.x, player.y, player.w ,player.h);
+        }
+
+        ball.x += ball.orientationX * ball.speed;
+        ball.y += ball.orientationY * ball.speed;
+
+        var player2 = game.players['player2'];
+        var dx = player2.x - ball.x;
+        var dy = player2.y - ball.y;
+        var redePredict = redeNeural.predict([ball.orientationX, ball.orientationY, Math.sqrt(dx ** 2 + dy ** 2)]);
+        var subir = Math.round(redePredict[0]);
+        var descer = Math.round(redePredict[1]);
+        var parar = Math.round(redePredict[2]);
+
+        if (subir == 1 && descer == 0 && parar == 0 && player2.y > 0){
+            player2.y -= player2.speed;
+        }else if(subir == 0 && descer == 1 && parar == 0 && player2.y < canvas.height - player2.h){
+            player2.y += player2.speed;
+        }else if (subir == 0 && descer == 0 && parar == 1) {
+            player2.y += 0;
+        }
+
+        for (var i=0; i<redeNeural.i_nodes; i++){
+            context2.fillStyle = 'green';
+            context2.fillRect(0, 100*i + 100, 30,30);
+        }
+
+        for (var i=0; i<redeNeural.h_nodes; i++){
+            context2.fillStyle = 'blue';
+            context2.fillRect(150, 50*i + 100, 30,30);
+        }
+
+        for (var i=0; i<redeNeural.o_nodes; i++){
+            if (subir == 1){
+                if (i==0){
+                    context2.fillStyle = 'red';
+                }else{
+                    context2.fillStyle = 'black';
+                }
+            }else if (descer == 1){
+                if (i==1){
+                    context2.fillStyle = 'red';
+                }else{
+                    context2.fillStyle = 'black';
+                }
+            }else if (parar == 1){
+                if (i==2){
+                    context2.fillStyle = 'red';
+                }else{
+                    context2.fillStyle = 'black';
+                }
+            }
+            context2.fillRect(300, 100*i + 100, 30,30);
+        }
+
+        context2.font = "20px Arial";
+        context2.fillStyle = 'black';
+        context2.fillText(subir, 0, 25);
+        context2.fillText(descer, 20, 25);
+        context2.fillText(parar, 40, 25);
+
+        checkBallColision(ball);
     }
 
-    ball.x += ball.orientationX * ball.speed;
-    ball.y += ball.orientationY * ball.speed;
-
-    checkBallColision(ball);
-
     requestAnimationFrame(renderGame);
+
 }
 
 function checkBallColision(ball){
@@ -100,6 +164,9 @@ function checkBallColision(ball){
         ball.y = (canvas.height / 2) - 2;
         ball.orientationX = Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3;
         ball.orientationY = Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3;
+        if (!train){
+            train = true;
+        }
     }
 
     if(ball.y + ball.h >= canvas.height || ball.y <= 0) {

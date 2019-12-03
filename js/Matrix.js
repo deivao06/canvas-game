@@ -21,7 +21,7 @@ class Matrix {
 
     randomize(){
         this.map((elm, i, j) => {
-            return Math.random()*2-1
+            return Math.random()*2-1;
         });
     }
 
