@@ -9,16 +9,16 @@ var train = true;
 
 var trainData = {
     inputs : [
-        [1,-1, 15],
-        [1,1, 15],
-        [1,1, 2],
-        [1, -1, 2]
+        [1,-1, 12],
+        [1,1, 12],
+        //[1,1, 12],
+        //[1, -1, 12]
     ],
     outputs : [
         [1, 0, 0], //SUBIR
         [0,1,0], //DESCER
-        [0,0,1], //PARAR
-        [0,0,1], //PARAR
+        //[0,0,1], //PARAR
+        //[0,0,1], //PARAR
     ]
 };
 
@@ -48,7 +48,7 @@ var game = {
             y: (canvas.height / 2) - 30,
             orientationX: Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3,
             orientationY: Math.pow(2, Math.floor( Math.random() * 2 )+1) - 3,
-            speed: 3
+            speed: 2
         },
     }
 };
@@ -66,11 +66,11 @@ function renderGame(){
             redeNeural.train(trainData.inputs[index], trainData.outputs[index]);
         }
 
-        if (redeNeural.predict([1,-1, 15])[0] > 0.98 && redeNeural.predict([1, -1, 2])[2] > 0.98) {
+        if (redeNeural.predict([1,-1, 22])[0] > 0.98) {
             train = false;
             console.log('TREINOU');
         }else{
-            console.log(redeNeural.predict([1,-1, 15])[0], redeNeural.predict([1, -1, 2])[2])
+            console.log(redeNeural.predict([1,-1, 22])[0])
         }
     }else{
         //BALL
@@ -91,13 +91,24 @@ function renderGame(){
         }
 
         var player2 = game.players['player2'];
-        if (movePlayer2(player2, ball) === 'subir'){
+
+        var dx = player2.x - ball.x;
+        var dy = player2.y - ball.y;
+        var distance = Math.sqrt(dx ** 2 + dy **2) / 10;
+
+        var redeNeuralOutput = redeNeural.predict([ball.orientationX, ball.orientationY, distance]);
+        
+        var subir = Math.round(redeNeuralOutput[0]);
+        var descer = Math.round(redeNeuralOutput[1]);
+        var parar = Math.round(redeNeuralOutput[2]);
+
+        if (subir && !descer && !parar && player2.y > 0){
             player2.y -= player2.speed;
-        }else if (movePlayer2(player2, ball) === 'descer'){
+        }else if(!subir && descer && !parar && player2.y + player2.h < canvas.width){
             player2.y += player2.speed;
-        }else if (movePlayer2(player2, ball) === 'parar'){
+        }else if(!subir && !descer && parar){
             player2.y += 0;
-        };
+        }
     }
 
     requestAnimationFrame(renderGame);
@@ -132,23 +143,7 @@ function resetBallPosition(ball){
 }
 
 function movePlayer2(player2, ball){
-    var dx = player2.x - ball.x;
-    var dy = player2.y - ball.y;
-    var distance = Math.sqrt(dx ** 2 + dy **2);
-
-    var redeNeuralOutput = redeNeural.predict([ball.orientationX, ball.orientationY, distance]);
-
-    var subir = redeNeuralOutput[0];
-    var descer = redeNeuralOutput[1];
-    var parar = redeNeuralOutput[2];
-
-    if (subir && !descer && !parar && player2.y > 0){
-        return 'subir';
-    }else if(!subir && descer && !parar && player2.y + player2.h < canvas.width){
-        return 'descer';
-    }else if(!subir && !descer && parar){
-        return 'parar';
-    }
+    
 }
 
 document.addEventListener("keydown", function (event) {
