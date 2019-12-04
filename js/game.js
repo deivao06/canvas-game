@@ -184,7 +184,7 @@ document.addEventListener("keydown", function (event) {
             }
             if (ball.orientationX == 0 && ball.orientationY == 0){
                 ball.orientationX = -1
-                ball.orientationY = -1
+                ball.orientationY = 0
             }
             break;
         case 40:
@@ -193,7 +193,7 @@ document.addEventListener("keydown", function (event) {
             }
             if (ball.orientationX == 0 && ball.orientationY == 0){
                 ball.orientationX = -1
-                ball.orientationY = 1
+                ball.orientationY = 0
             }
             break;
         default:

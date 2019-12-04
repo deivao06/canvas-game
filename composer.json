@@ -1,0 +1,6 @@
+{
+    "name": "david/canvas-game",
+    "require": {
+        "cboden/ratchet": "^0.4.1"
+    }
+}
