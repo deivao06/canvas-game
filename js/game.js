@@ -4,6 +4,7 @@ var context = canvas.getContext("2d");
 var canvas2 = document.getElementById("canvas2");
 var context2 = canvas2.getContext("2d");
 
+var gamemode = null;
 var redeNeural = new RedeNeural(3,5,1);
 var train = true;
 
@@ -63,55 +64,63 @@ function renderGame(){
     context.clearRect(0,0,canvas.width, canvas.height);
     context2.clearRect(0,0,canvas2.width, canvas2.height);
 
-    if (train){
-        //REDE NEURAL
-        context2.font = "30px Arial";
-        context2.fillText("TREINANDO...", 10, 50);
+    if (gamemode == "singleplayer"){
+        if (train){
+            //REDE NEURAL
+            context2.font = "30px Arial";
+            context2.fillText("TREINANDO...", 10, 50);
 
-        for (var i=0; i< 10000; i++){
-            var index = random(0, trainData.inputs.length - 1);
-            redeNeural.train(trainData.inputs[index], trainData.outputs[index]);
-        }
-
-        if (redeNeural.predict([1,-1, 2])[0] > 0.98 && redeNeural.predict([1,-1, 10])[0] < 0.04) {
-            train = false;
-            console.log('TREINOU');
-        }
-    }else{
-        //BALL
-        var ball = game.balls['ball1'];
-        context.fillStyle = "red";
-        context.fillRect(ball.x, ball.y, ball.w, ball.h);
-
-        //MOVE BALL
-        ball.x += ball.orientationX * ball.speed;
-        ball.y += ball.orientationY * ball.speed;
-        checkBallColision(ball);
-
-        //PLAYERS
-        for (var playerId in game.players){
-            var player = game.players[playerId];
-            context.fillStyle = "black";
-            context.fillRect(player.x, player.y, player.w, player.h);
-        }
-
-        //MOVE PLAYER2
-        var player2 = game.players['player2'];
-        var redeNeuralOutput = movePlayer(player2, ball);
-
-        //DRAW NEURAL NETWORK
-        for (var i=0; i< redeNeural.o_nodes; i++){
-            if (redeNeuralOutput){
-                context2.fillStyle = "red";
-                context2.font = "30px Arial";
-                context2.fillText("ALINHAR", 40,175);
-            }else{
-                context2.fillStyle = "black";
-                context2.font = "30px Arial";
-                context2.fillText("CENTRALIZAR", 40,175);
+            for (var i=0; i< 10000; i++){
+                var index = random(0, trainData.inputs.length - 1);
+                redeNeural.train(trainData.inputs[index], trainData.outputs[index]);
             }
-            context2.fillRect(0,150,30,30);
+
+            if (redeNeural.predict([1,-1, 2])[0] > 0.98 && redeNeural.predict([1,-1, 10])[0] < 0.04) {
+                train = false;
+                console.log('TREINOU');
+            }
+        }else{
+            //BALL
+            var ball = game.balls['ball1'];
+            context.fillStyle = "red";
+            context.fillRect(ball.x, ball.y, ball.w, ball.h);
+
+            //MOVE BALL
+            ball.x += ball.orientationX * ball.speed;
+            ball.y += ball.orientationY * ball.speed;
+            checkBallColision(ball);
+
+            //PLAYERS
+            for (var playerId in game.players){
+                var player = game.players[playerId];
+                context.fillStyle = "black";
+                context.fillRect(player.x, player.y, player.w, player.h);
+            }
+
+            //MOVE PLAYER2
+            var player2 = game.players['player2'];
+            var redeNeuralOutput = movePlayer(player2, ball);
+
+            //DRAW NEURAL NETWORK
+            for (var i=0; i< redeNeural.o_nodes; i++){
+                if (redeNeuralOutput){
+                    context2.fillStyle = "red";
+                    context2.font = "30px Arial";
+                    context2.fillText("ALINHAR", 40,175);
+                }else{
+                    context2.fillStyle = "black";
+                    context2.font = "30px Arial";
+                    context2.fillText("CENTRALIZAR", 40,175);
+                }
+                context2.fillRect(0,150,30,30);
+            }
         }
+    }else if (gamemode == "multiplayer"){
+
+    }else{
+        context.font = "25px Arial";
+        context.fillText("PRESS UP TO SINGLEPLAYER", 15, 50);
+        context.fillText("PRESS DOWN TO MULTIPLAYER", 5, 100);
     }
 
     requestAnimationFrame(renderGame);
@@ -211,3 +220,12 @@ function random(min, max, float = false){
 
     return randomNumber;
 }
+
+var conn = new WebSocket('ws://192.168.10.209:8080');
+conn.onopen = function(e) {
+    console.log("Connection established!");
+};
+
+conn.onmessage = function(e) {
+    console.log(e.data);
+};
