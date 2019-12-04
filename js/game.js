@@ -9,16 +9,16 @@ var train = true;
 
 var trainData = {
     inputs : [
-        [1,-1, 12],
-        [1,1, 12],
-        //[1,1, 12],
-        //[1, -1, 12]
+        [1,-1,5],
+        [1,1,5],
+        [1,1,20],
+        [1,-1,20],
     ],
     outputs : [
-        [1, 0, 0], //SUBIR
+        [0,0,1], //PARAR
+        [0,0,1], //PARAR
         [0,1,0], //DESCER
-        //[0,0,1], //PARAR
-        //[0,0,1], //PARAR
+        [1,0,0], //SUBIR
     ]
 };
 
@@ -36,7 +36,7 @@ var game = {
             h: 50,
             x: canvas.width - 15,
             y: (canvas.height / 2) - 50,
-            speed: 3,
+            speed: 8,
         }
     },
 
@@ -66,11 +66,11 @@ function renderGame(){
             redeNeural.train(trainData.inputs[index], trainData.outputs[index]);
         }
 
-        if (redeNeural.predict([1,-1, 22])[0] > 0.98) {
+        if (redeNeural.predict([1,-1, 5])[2] > 0.98) {
             train = false;
             console.log('TREINOU');
         }else{
-            console.log(redeNeural.predict([1,-1, 22])[0])
+            console.log(redeNeural.predict([1,-1, 5])[2])
         }
     }else{
         //BALL
@@ -90,11 +90,15 @@ function renderGame(){
             context.fillRect(player.x, player.y, player.w, player.h);
         }
 
+        //MOVE PLAYER2
         var player2 = game.players['player2'];
 
         var dx = player2.x - ball.x;
         var dy = player2.y - ball.y;
-        var distance = Math.sqrt(dx ** 2 + dy **2) / 10;
+        var distance = Math.sqrt(dx*dx + dy*dy) / 10;
+
+        context2.font = "30px Arial";
+        context2.fillText(distance, 10, 50);
 
         var redeNeuralOutput = redeNeural.predict([ball.orientationX, ball.orientationY, distance]);
         
