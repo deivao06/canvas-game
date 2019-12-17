@@ -5,14 +5,16 @@ use Ratchet\ConnectionInterface;
 
 class Server implements MessageComponentInterface {
     protected $clients;
+    public $players;
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
+        $this->players = [];
     }
 
     public function onOpen(ConnectionInterface $conn) {
-
         $this->clients->attach($conn);
+        $this->players;
 
         echo "New connection! ({$conn->resourceId})\n";
     }

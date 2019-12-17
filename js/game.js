@@ -8,6 +8,19 @@ var gamemode = null;
 var redeNeural = new RedeNeural(3,5,1);
 var train = true;
 
+var conn = new WebSocket('ws://192.168.10.209:8080');
+conn.onopen = function(e) {
+    console.log("Connection established!");
+};
+
+conn.onmessage = function(e) {
+    console.log(e.data);
+};
+
+conn.onclose = function (e) {
+    console.log("Connection closed!");
+};
+
 var trainData = {
     inputs : [
         [1,-1,2],
@@ -29,19 +42,24 @@ var trainData = {
 
 var game = {
     players : {
-        'player1' : {
-            w: 15,
-            h: 50,
-            x: 0,
-            y: (canvas.height / 2) - 50,
-            speed: 10,
+        singleplayer:{
+            'player1' : {
+                w: 15,
+                h: 50,
+                x: 0,
+                y: (canvas.height / 2) - 50,
+                speed: 10,
+            },
+            'player2' : {
+                w: 15,
+                h: 50,
+                x: canvas.width - 15,
+                y: (canvas.height / 2) - 50,
+                speed: 8,
+            }
         },
-        'player2' : {
-            w: 15,
-            h: 50,
-            x: canvas.width - 15,
-            y: (canvas.height / 2) - 50,
-            speed: 8,
+        multiplayer:{
+
         }
     },
 
@@ -91,14 +109,14 @@ function renderGame(){
             checkBallColision(ball);
 
             //PLAYERS
-            for (var playerId in game.players){
-                var player = game.players[playerId];
+            for (var playerId in game.players.singleplayer){
+                var player = game.players.singleplayer[playerId];
                 context.fillStyle = "black";
                 context.fillRect(player.x, player.y, player.w, player.h);
             }
 
             //MOVE PLAYER2
-            var player2 = game.players['player2'];
+            var player2 = game.players.singleplayer['player2'];
             var redeNeuralOutput = movePlayer(player2, ball);
 
             //DRAW NEURAL NETWORK
@@ -116,7 +134,6 @@ function renderGame(){
             }
         }
     }else if (gamemode == "multiplayer"){
-
     }else{
         context.font = "25px Arial";
         context.fillText("PRESS UP TO SINGLEPLAYER", 15, 50);
@@ -127,8 +144,8 @@ function renderGame(){
 }
 
 function checkBallColision(ball){
-    var player1 = game.players['player1'];
-    var player2 = game.players['player2'];
+    var player1 = game.players.singleplayer['player1'];
+    var player2 = game.players.singleplayer['player2'];
 
     if (ball.x >= player1.x && ball.x <= player1.x + player1.w && ball.y >= player1.y && ball.y <= player1.y + player1.h){
         ball.orientationX = 1;
@@ -183,11 +200,14 @@ function movePlayer(player, ball){
 }
 
 document.addEventListener("keydown", function (event) {
-    var player = game.players['player1'];
+    var player = game.players.singleplayer['player1'];
     var ball = game.balls['ball1'];
 
     switch (event.which) {
         case 38:
+            if (!gamemode){
+                gamemode = "singleplayer";
+            }
             if (player.y > 0){
                 player.y -= player.speed;
             }
@@ -197,6 +217,9 @@ document.addEventListener("keydown", function (event) {
             }
             break;
         case 40:
+            if (!gamemode){
+                gamemode = "multiplayer";
+            }
             if (player.y < canvas.height - player.h){
                 player.y += player.speed;
             }
@@ -220,12 +243,3 @@ function random(min, max, float = false){
 
     return randomNumber;
 }
-
-var conn = new WebSocket('ws://192.168.10.209:8080');
-conn.onopen = function(e) {
-    console.log("Connection established!");
-};
-
-conn.onmessage = function(e) {
-    console.log(e.data);
-};
